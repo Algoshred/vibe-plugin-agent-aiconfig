@@ -10,7 +10,18 @@ import { Elysia, t } from "elysia";
 
 // ── Locally Redeclared Interfaces ────────────────────────────────────────
 
+interface PluginCapabilities {
+  storage?: "none" | "read" | "rw";
+  secrets?: "none" | "read" | "rw";
+  gateway?: boolean;
+  broadcast?: boolean;
+  subprocess?: boolean;
+  audit?: boolean;
+  telemetry?: boolean;
+}
+
 interface VibePlugin {
+  capabilities?: PluginCapabilities;
   name: string;
   version: string;
   description?: string;
@@ -255,6 +266,11 @@ function createBridleRoutes() {
 // ── Plugin Export ────────────────────────────────────────────────────────
 
 export const vibePlugin: VibePlugin = {
+  capabilities: {
+    storage: "rw",
+    secrets: "read",
+    broadcast: true,
+  },
   name: "bridle",
   version: "1.0.0",
   description:
