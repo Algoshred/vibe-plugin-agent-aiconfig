@@ -7,34 +7,12 @@
  */
 
 import { Elysia, t } from "elysia";
-
-// ── Locally Redeclared Interfaces ────────────────────────────────────────
-
-interface PluginCapabilities {
-  storage?: "none" | "read" | "rw";
-  secrets?: "none" | "read" | "rw";
-  gateway?: boolean;
-  broadcast?: boolean;
-  subprocess?: boolean;
-  audit?: boolean;
-  telemetry?: boolean;
-}
-
-interface VibePlugin {
-  capabilities?: PluginCapabilities;
-  name: string;
-  version: string;
-  description?: string;
-  tags?: Array<
-    "backend" | "frontend" | "cli" | "provider" | "adapter" | "integration"
-  >;
-  cliCommand?: string;
-  apiPrefix?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  createRoutes?: () => any;
-  onServerStart?: (app: unknown, hostServices?: unknown) => void | Promise<void>;
-  onServerStop?: () => void | Promise<void>;
-}
+import type { HostServices, VibePlugin } from "@vibecontrols/plugin-sdk";
+import {
+  BoundLogger,
+  TelemetryEmitter,
+  createLifecycleHooks,
+} from "@vibecontrols/plugin-sdk";
 
 // ── Helper: run bridle CLI ───────────────────────────────────────────────
 
@@ -265,23 +243,39 @@ function createBridleRoutes() {
 
 // ── Plugin Export ────────────────────────────────────────────────────────
 
+const PLUGIN_NAME = "bridle";
+const PLUGIN_VERSION = "1.0.0";
+
+const lifecycle = createLifecycleHooks({
+  name: PLUGIN_NAME,
+  telemetryEventName: `${PLUGIN_NAME}.ready`,
+  onInit: (hostServices: HostServices) => {
+    const log = new BoundLogger(hostServices.logger, PLUGIN_NAME);
+    log.info("Bridle plugin ready");
+    new TelemetryEmitter(PLUGIN_NAME, PLUGIN_VERSION, hostServices).emitReady();
+  },
+});
+
 export const vibePlugin: VibePlugin = {
   capabilities: {
     storage: "rw",
     secrets: "read",
     broadcast: true,
   },
-  name: "bridle",
-  version: "1.0.0",
+  name: PLUGIN_NAME,
+  version: PLUGIN_VERSION,
   description:
     "Cross-harness configuration management via Bridle — profiles, skills, agents, commands, and MCPs",
   tags: ["backend", "cli", "integration"],
-  cliCommand: "bridle",
+  cliCommand: PLUGIN_NAME,
   apiPrefix: "/api/bridle",
 
   createRoutes() {
     return createBridleRoutes();
   },
+
+  onServerStart: lifecycle.onServerStart,
+  onServerStop: lifecycle.onServerStop,
 };
 
 export default vibePlugin;
