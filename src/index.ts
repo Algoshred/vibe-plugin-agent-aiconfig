@@ -7,7 +7,12 @@
  */
 
 import { Elysia, t } from "elysia";
-import type { HostServices, VibePlugin } from "@vibecontrols/plugin-sdk";
+import type {
+  HostServices,
+  ProfileContext,
+  VibePlugin,
+  VibePluginFactory,
+} from "@vibecontrols/plugin-sdk";
 import {
   BoundLogger,
   TelemetryEmitter,
@@ -244,38 +249,51 @@ function createBridleRoutes() {
 // ── Plugin Export ────────────────────────────────────────────────────────
 
 const PLUGIN_NAME = "bridle";
-const PLUGIN_VERSION = "1.0.0";
+const PLUGIN_VERSION = "2026.509.3";
 
-const lifecycle = createLifecycleHooks({
-  name: PLUGIN_NAME,
-  telemetryEventName: `${PLUGIN_NAME}.ready`,
-  onInit: (hostServices: HostServices) => {
-    const log = new BoundLogger(hostServices.logger, PLUGIN_NAME);
-    log.info("Bridle plugin ready");
-    new TelemetryEmitter(PLUGIN_NAME, PLUGIN_VERSION, hostServices).emitReady();
-  },
-});
+/**
+ * Plugin contract V2 factory. Builds a fresh VibePlugin (with its own
+ * lifecycle/telemetry) per call. Bridle CLI invocations are stateless
+ * subprocess spawns, so no module-level state is required.
+ */
+export const createPlugin: VibePluginFactory = (
+  _ctx: ProfileContext,
+): VibePlugin => {
+  const lifecycle = createLifecycleHooks({
+    name: PLUGIN_NAME,
+    telemetryEventName: `${PLUGIN_NAME}.ready`,
+    onInit: (hostServices: HostServices) => {
+      const log = new BoundLogger(hostServices.logger, PLUGIN_NAME);
+      log.info("Bridle plugin ready");
+      new TelemetryEmitter(
+        PLUGIN_NAME,
+        PLUGIN_VERSION,
+        hostServices,
+      ).emitReady();
+    },
+  });
 
-export const vibePlugin: VibePlugin = {
-  capabilities: {
-    storage: "rw",
-    secrets: "read",
-    broadcast: true,
-  },
-  name: PLUGIN_NAME,
-  version: PLUGIN_VERSION,
-  description:
-    "Cross-harness configuration management via Bridle — profiles, skills, agents, commands, and MCPs",
-  tags: ["backend", "cli", "integration"],
-  cliCommand: PLUGIN_NAME,
-  apiPrefix: "/api/bridle",
+  const plugin: VibePlugin = {
+    capabilities: {
+      storage: "rw",
+      secrets: "read",
+      broadcast: true,
+    },
+    name: PLUGIN_NAME,
+    version: PLUGIN_VERSION,
+    description:
+      "Cross-harness configuration management via Bridle — profiles, skills, agents, commands, and MCPs",
+    tags: ["backend", "cli", "integration"],
+    cliCommand: PLUGIN_NAME,
+    apiPrefix: "/api/bridle",
 
-  createRoutes() {
-    return createBridleRoutes();
-  },
+    createRoutes() {
+      return createBridleRoutes();
+    },
 
-  onServerStart: lifecycle.onServerStart,
-  onServerStop: lifecycle.onServerStop,
+    onServerStart: lifecycle.onServerStart,
+    onServerStop: lifecycle.onServerStop,
+  };
+
+  return plugin;
 };
-
-export default vibePlugin;
