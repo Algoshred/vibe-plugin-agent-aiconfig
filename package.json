@@ -10,13 +10,13 @@
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target bun --minify-syntax --minify-whitespace --external elysia && tsc --emitDeclarationOnly --declaration --outDir ./dist",
     "dev": "tsc --watch",
-    "type:check": "tsc --noEmit",
+    "type:check": "bash scripts/build-limits.sh tsc --noEmit",
     "clean": "rimraf dist",
     "prebuild": "bun run clean",
     "lint": "echo skip lint",
     "test": "echo skip test",
     "format:check": "echo skip format",
-    "sanity": "bun run format:check && bun run lint && bun run type:check && bun run build && bun run test"
+    "sanity": "bash scripts/build-limits.sh --gate bash -c 'bun run format:check && bun run lint && bun run type:check && bun run build && bun run test'"
   },
   "dependencies": {
     "@vibecontrols/plugin-sdk": "2026.509.2",
