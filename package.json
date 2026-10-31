@@ -19,7 +19,7 @@
     "sanity": "bash scripts/build-limits.sh --gate bash -c 'bun run format:check && bun run lint && bun run type:check && bun run build && bun run test'"
   },
   "dependencies": {
-    "@vibecontrols/plugin-sdk": "2026.509.2",
+    "@vibecontrols/plugin-sdk": "2026.601.1",
     "elysia": "^1.4.0"
   },
   "devDependencies": {
