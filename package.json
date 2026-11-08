@@ -60,10 +60,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/algoshred/vibe-plugin-agent-aiconfig.git"
+    "url": "git+https://github.com/Algoshred/vibe-plugin-agent-aiconfig.git"
   },
   "bugs": {
-    "url": "https://github.com/algoshred/vibe-plugin-agent-aiconfig/issues"
+    "url": "https://github.com/Algoshred/vibe-plugin-agent-aiconfig/issues"
   },
   "publishConfig": {
     "access": "public",
